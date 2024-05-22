@@ -1,0 +1,52 @@
+(function(){
+    // Define question IDs (replace with actual question IDs from your survey)
+    var question1ID = 'QID1';
+    var question2ID = 'QID2';
+    var question3ID = 'QID3';
+    var question4ID = 'QID4';
+    
+    // Function to handle the branching logic and API call
+    function handleBranchingAndPiping() {
+        // Get the response to Question 1
+        var productType = SurveyGizmo.pageQuestions[question1ID].value();
+        
+        // Show or hide questions based on the response to Question 1
+        if (productType === 'Electronics') {
+            SurveyGizmo.pageQuestions[question2ID].show();
+            SurveyGizmo.pageQuestions[question3ID].hide();
+        } else if (productType === 'Clothing') {
+            SurveyGizmo.pageQuestions[question2ID].hide();
+            SurveyGizmo.pageQuestions[question3ID].show();
+        } else {
+            SurveyGizmo.pageQuestions[question2ID].hide();
+            SurveyGizmo.pageQuestions[question3ID].hide();
+        }
+        
+        // Piping response from Question 1 into Question 4
+        if (productType) {
+            var question4Text = "You selected " + productType + ". What specific features are you looking for in " + productType + "?";
+            SurveyGizmo.pageQuestions[question4ID].setQuestion(question4Text);
+            SurveyGizmo.pageQuestions[question4ID].show();
+
+            // Make an API call to fetch additional data based on productType
+            fetch('https://{API_URL}getFeatures?productType=' + encodeURIComponent(productType))
+                .then(response => response.json())
+                .then(data => {
+                    // Process the data and potentially update the survey
+                    console.log('API Response:', data);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        } else {
+            SurveyGizmo.pageQuestions[question4ID].hide();
+        }
+    }
+
+    // Add an event listener to Question 1 to trigger the branching logic on change
+    SurveyGizmo.pageQuestions[question1ID].input.on('change', handleBranchingAndPiping);
+    
+    // Initial call to set up the correct state when the page loads
+    handleBranchingAndPiping();
+
+})();
